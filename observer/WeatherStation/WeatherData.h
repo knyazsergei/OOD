@@ -37,7 +37,7 @@ private:
 };
 
 struct StatsData{
-	double max = std::numeric_limits<double>::infinity();
+	double max = -std::numeric_limits<double>::infinity();
 	double min = std::numeric_limits<double>::infinity();
 	double sum = 0;
 	double count = 0;
