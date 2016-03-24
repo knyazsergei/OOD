@@ -2,9 +2,10 @@
 
 #include <set>
 #include <vector>
+#include <map>
 #include <functional>
 #include <algorithm>
-
+#include <iterator>
 
 /*
 Шаблонный интерфейс IObserver. Его должен реализовывать класс, 
@@ -44,7 +45,8 @@ public:
 	void RegisterObserver(ObserverType & observer, unsigned priority) override
 	{
 		m_observers.push_back({ &observer, priority });
-		sort(m_observers.begin(), m_observers.end(), [](const std::pair<ObserverType *, unsigned> & left, const std::pair<ObserverType *, unsigned> &right) {
+	
+		sort(m_observers.begin(), m_observers.end(), [](const auto & left, const auto & right) {
 			return left.second < right.second;
 		});
 	}
@@ -60,14 +62,12 @@ public:
 
 	void RemoveObserver(ObserverType & observer) override
 	{
-		/*
-		auto it = find_if(m_observers.begin(), m_observers.end(), [observer](const std::pair<ObserverType *, unsigned> & element) 
-			{ 
-				return element.first == observer;
-			}
+		auto it = find_if(m_observers.begin(), m_observers.end(), [&observer](const auto & element)
+		{
+			return element.first == &observer;
+		}
 		);
 		m_observers.erase(it);
-		*/
 	}
 
 protected:

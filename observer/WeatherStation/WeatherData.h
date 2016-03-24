@@ -29,6 +29,7 @@ private:
 	*/
 	void Update(SWeatherInfo const& data) override
 	{
+		std::cout << "Display:" << std::endl;
 		std::cout << "Current Temp " << data.sensors.at("temperature") << std::endl;
 		std::cout << "Current Hum " << data.sensors.at("humidity") << std::endl;
 		std::cout << "Current Pressure " << data.sensors.at("pressure") << std::endl;
@@ -40,7 +41,24 @@ struct StatsData{
 	double max = -std::numeric_limits<double>::infinity();
 	double min = std::numeric_limits<double>::infinity();
 	double sum = 0;
-	double count = 0;
+	double average = 0;
+	unsigned count = 0;
+	
+	void update(const double & value)
+	{
+		++count;
+
+		if (min > value)
+		{
+			min = value;
+		}
+		if (max < value)
+		{
+			max = value;
+		}
+		sum += value;
+		average = sum / count;
+	}
 };
 
 class CStatsDisplay : public IObserver<SWeatherInfo>
@@ -50,31 +68,22 @@ private:
 	Классу CObservable он будет доступен все равно, т.к. в интерфейсе IObserver он
 	остается публичным
 	*/
-	std::map < std::string, StatsData> m_stats;
+	std::map < const std::string, StatsData> m_stats;
 
 	void Update(SWeatherInfo const& data) override
 	{
-		StatsData statsData;
-		for (auto statPair : data.sensors)
+		cout << "Stats:" << std::endl;
+		for (auto & statPair : data.sensors)
 		{
-			if (m_stats.find(statPair.first) == m_stats.end())
-			{
-				m_stats[statPair.first] = StatsData();
-			}
-			if (m_stats.at(statPair.first).min > statPair.second)
-			{
-				m_stats.at(statPair.first).min = statPair.second;
-			}
-			if (m_stats.at(statPair.first).max < statPair.second)
-			{
-				m_stats.at(statPair.first).max = statPair.second;
-			}
-			m_stats.at(statPair.first).sum += statPair.second;
-			++m_stats.at(statPair.first).count;
+			//для лучшей читабельности
+			StatsData & statsData = m_stats[statPair.first];
+			const std::string & sensorTypeName = statPair.first;
+			
+			statsData.update(statPair.second);
 
-			std::cout << "Max " << statPair.first << ": " << m_stats.at(statPair.first).max << std::endl;
-			std::cout << "Min " << statPair.first << ": " << m_stats.at(statPair.first).min << std::endl;
-			std::cout << "Average " << statPair.first << ": " << (m_stats.at(statPair.first).sum / m_stats.at(statPair.first).count) << std::endl;
+			std::cout << "Max " << sensorTypeName << ": " << statsData.max << std::endl;
+			std::cout << "Min " << sensorTypeName << ": " << statsData.min << std::endl;
+			std::cout << "Average " << sensorTypeName << ": " << statsData.average << std::endl;
 			std::cout << "----------------" << std::endl;
 		}
 	}
@@ -91,12 +100,12 @@ public:
 	// Относительная влажность (0...100)
 	double GetHumidity()const
 	{
-		return humidity;
+		return m_humidity;
 	}
 	// Атмосферное давление (в мм.рт.ст)
 	double GetPressure()const
 	{
-		return pressure;
+		return m_pressure;
 	}
 
 	void MeasurementsChanged()
@@ -106,9 +115,9 @@ public:
 
 	void SetMeasurements(double temp, double humidity, double pressure)
 	{
-		humidity = humidity;
+		m_humidity = humidity;
 		m_temperature = temp;
-		pressure = pressure;
+		m_pressure = pressure;
 
 		MeasurementsChanged();
 	}
@@ -123,6 +132,6 @@ protected:
 	}
 private:
 	double m_temperature = 0.0;
-	double humidity = 0.0;	
-	double pressure = 760.0;	
+	double m_humidity = 0.0;	
+	double m_pressure = 760.0;
 };
